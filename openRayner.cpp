@@ -1,9 +1,90 @@
 // hello there!
+#include <string>
+#include <memory>
+#include <iostream>
+#include <vector>
+#include <array>
 
-#include "./openRayner.h"
-#include "./scene.hpp"
+#include "./3rdParty/tinyGLTF/tiny_gltf.h"
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "./3rdParty/tinyOBJ/tiny_obj_loader.h"
+#include "vulkan/vulkan.h"
+//#include "glm/glm.hpp"
+#include "openRayner.h"
 
 #define PRINT_INFO false
+
+
+class Scene {
+    public:
+    //bool loadFromGltf(std::string fileName, tinygltf::Model &model);
+    bool loadFromObj(std::string fileName, std::string mtlFileName);
+    
+    void loadFromFile(std::string fileName);
+    void loadScene();
+
+    private:    
+    struct Vertex {
+        float pos;
+    };
+    struct Model {
+        std::vector<Vertex> vertices;
+        std::vector<std::array<uint32_t, 3>> indices;
+        std::string name;
+        uint32_t meshNumber;
+    };
+    std::vector<Model> models = {};
+    bool parseFromImportedObj(tinyobj::attrib_t importedObj);
+};
+
+class geometricData {
+
+};
+
+
+
+void Scene::loadFromFile(std::string fileName) {
+    
+    // loads file from GLTF
+
+
+}
+
+void Scene::loadScene() {
+
+}
+
+
+bool Scene::loadFromObj(std::string fileName, std::string mtlFileName) {
+    std::cout << "Loading " << fileName << std::endl;
+
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    const char* filename = fileName.c_str();
+    const char* mtlfile = mtlFileName.c_str();
+    std::string warn,err;
+    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename,
+                                mtlfile, true);
+
+    if (!warn.empty()) std::cout << "WARN: " << warn << std::endl;
+    if (!err.empty()) std::cerr << "ERR: " << err << std::endl;
+
+    if (!ret) {
+        std::cout << "Failed to load/parse " << fileName << std::endl;
+        return false;
+    }
+
+    std::cout << "Loading completed successful!" << std::endl;
+    std::cout << "Parsing..." << std::endl;
+    for (auto shape : shapes) {
+        std::cout << shape.name << std::endl;
+        std::cout << static_cast<unsigned long>(shape.mesh.indices.size());
+    }
+
+    return ret;
+}
 
 void printStats(VkPhysicalDevice &device) {
     VkPhysicalDeviceProperties properties;
@@ -157,8 +238,10 @@ void deviceInfo() {
 }
 
 int main() {
-    
-    std::cout << "Helo!";
+    Scene scene;
+    std::string filename = "../testGeometry/test.obj";
+    std::string mtlfilename = "../testGeometry/";
+    scene.loadFromObj(filename,mtlfilename);
 
     return 0;
 }

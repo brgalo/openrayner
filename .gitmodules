@@ -4,3 +4,9 @@
 [submodule "3rdParty/tinyOBJ"]
 	path = 3rdParty/tinyOBJ
 	url = https://github.com/tinyobjloader/tinyobjloader.git
+[submodule "3rdParty/vulkan"]
+	path = 3rdParty/vulkan
+	url = https://github.com/KhronosGroup/Vulkan-Headers.git
+[submodule "3rdParty/glm"]
+	path = 3rdParty/glm
+	url = https://github.com/g-truc/glm.git
