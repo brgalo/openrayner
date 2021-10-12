@@ -1,6 +1,9 @@
 // hello there!
 
 #include "./openRayner.h"
+#include "./scene.hpp"
+
+#define PRINT_INFO false
 
 void printStats(VkPhysicalDevice &device) {
     VkPhysicalDeviceProperties properties;
@@ -38,8 +41,7 @@ void printStats(VkPhysicalDevice &device) {
 
 }
 
-int main() {
-    
+void deviceInfo() {
     // name and version of application
     VkApplicationInfo appInfo;
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -152,6 +154,11 @@ int main() {
         std::cout << "Name : " << devExtension[i].extensionName << std::endl;
         std::cout << "Spec Ver: " << devExtension[i].specVersion << std:: endl;
     }
+}
+
+int main() {
+    
+    std::cout << "Helo!";
 
     return 0;
 }

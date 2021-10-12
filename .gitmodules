@@ -1,3 +1,6 @@
 [submodule "3rdParty/tinyGLTF"]
 	path = 3rdParty/tinyGLTF
 	url = https://github.com/syoyo/tinygltf.git
+[submodule "3rdParty/tinyOBJ"]
+	path = 3rdParty/tinyOBJ
+	url = https://github.com/tinyobjloader/tinyobjloader.git
