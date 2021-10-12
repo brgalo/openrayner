@@ -5,12 +5,11 @@
 #include <vector>
 #include <array>
 
-#include "./3rdParty/tinyGLTF/tiny_gltf.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "./3rdParty/tinyOBJ/tiny_obj_loader.h"
+#include "3rdParty/tinyOBJ/tiny_obj_loader.h"
 #include "vulkan/vulkan.h"
-//#include "glm/glm.hpp"
+#include "glm/glm.hpp"
 #include "openRayner.h"
 
 #define PRINT_INFO false

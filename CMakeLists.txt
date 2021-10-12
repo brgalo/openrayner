@@ -15,3 +15,5 @@ add_subdirectory(3rdParty)
 
 add_executable(openRayner openRayner.cpp)
 target_link_libraries(openRayner Vulkan::Vulkan)
+target_link_libraries(openRayner glm)
+target_link_libraries(openRayner tinyobj)
