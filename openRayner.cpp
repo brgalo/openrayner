@@ -18,15 +18,27 @@
 class Scene {
     public:
     //bool loadFromGltf(std::string fileName, tinygltf::Model &model);
-    bool loadFromObj(std::string fileName, std::string mtlFileName);
-    
-    void loadFromFile(std::string fileName);
+    bool loadModelFromFile(std::string fileName, std::string mtlFileName);
     void loadScene();
 
-    private:    
-    struct Vertex {
-        float pos;
+    class TriangleData {
+
     };
+    
+
+    class Mesh {
+        std::vector<TriangleData> triangles;
+    };
+
+    std::vector<glm::vec3> vertexBuffer;
+    std::vector<glm::uvec3> indexBuffer;
+
+    private:
+    struct Vertex {
+        glm::vec3 pos;
+
+    };
+
     struct Model {
         std::vector<Vertex> vertices;
         std::vector<std::array<uint32_t, 3>> indices;
@@ -35,6 +47,11 @@ class Scene {
     };
     std::vector<Model> models = {};
     bool parseFromImportedObj(tinyobj::attrib_t importedObj);
+
+
+
+
+
 };
 
 class geometricData {
@@ -43,46 +60,77 @@ class geometricData {
 
 
 
-void Scene::loadFromFile(std::string fileName) {
+bool Scene::loadModelFromFile(std::string fileName, std::string mtlFileName) {
     
-    // loads file from GLTF
+    // assumes .obj files
+    tinyobj::ObjReader reader;
+    tinyobj::ObjReaderConfig readerConfig;
+    readerConfig.mtl_search_path = mtlFileName;
 
+    if (!reader.ParseFromFile(fileName, readerConfig)) {
+        if (!reader.Error().empty()) {
+            std::cerr << "TinyObjReader: " << reader.Error();
+        }
+        exit(1);
+    }
 
+    if (!reader.Warning().empty()) {
+        std::cout << "TinyObjReader: " << reader.Warning();
+    }
+
+    auto& attrib = reader.GetAttrib();
+    auto& shapes = reader.GetShapes();
+    auto& materials = reader.GetMaterials();
+
+// Loop over shapes
+for (size_t s = 0; s < shapes.size(); s++) {
+  // Loop over faces(polygon)
+  size_t index_offset = 0;
+  for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+    size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
+
+    // Loop over vertices in the face.
+    for (size_t v = 0; v < fv; v++) {
+      // access to vertex
+      tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+      tinyobj::real_t vx = attrib.vertices[3*size_t(idx.vertex_index)+0];
+      tinyobj::real_t vy = attrib.vertices[3*size_t(idx.vertex_index)+1];
+      tinyobj::real_t vz = attrib.vertices[3*size_t(idx.vertex_index)+2];
+
+      std::cout << "vert " << v << " = ( " << vx << " " << vy << " " << vz << " )" << std::endl;
+
+      // Check if `normal_index` is zero or positive. negative = no normal data
+      if (idx.normal_index >= 0) {
+        tinyobj::real_t nx = attrib.normals[3*size_t(idx.normal_index)+0];
+        tinyobj::real_t ny = attrib.normals[3*size_t(idx.normal_index)+1];
+        tinyobj::real_t nz = attrib.normals[3*size_t(idx.normal_index)+2];
+      }
+
+      // Check if `texcoord_index` is zero or positive. negative = no texcoord data
+      if (idx.texcoord_index >= 0) {
+        tinyobj::real_t tx = attrib.texcoords[2*size_t(idx.texcoord_index)+0];
+        tinyobj::real_t ty = attrib.texcoords[2*size_t(idx.texcoord_index)+1];
+      }
+
+      // Optional: vertex colors
+      // tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
+      // tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
+      // tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
+    }
+    index_offset += fv;
+
+    // per-face material
+    shapes[s].mesh.material_ids[f];
+  }
 }
+
+    return true;
+}
+
+
 
 void Scene::loadScene() {
 
-}
-
-
-bool Scene::loadFromObj(std::string fileName, std::string mtlFileName) {
-    std::cout << "Loading " << fileName << std::endl;
-
-    tinyobj::attrib_t attrib;
-    std::vector<tinyobj::shape_t> shapes;
-    std::vector<tinyobj::material_t> materials;
-    const char* filename = fileName.c_str();
-    const char* mtlfile = mtlFileName.c_str();
-    std::string warn,err;
-    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename,
-                                mtlfile, true);
-
-    if (!warn.empty()) std::cout << "WARN: " << warn << std::endl;
-    if (!err.empty()) std::cerr << "ERR: " << err << std::endl;
-
-    if (!ret) {
-        std::cout << "Failed to load/parse " << fileName << std::endl;
-        return false;
-    }
-
-    std::cout << "Loading completed successful!" << std::endl;
-    std::cout << "Parsing..." << std::endl;
-    for (auto shape : shapes) {
-        std::cout << shape.name << std::endl;
-        std::cout << static_cast<unsigned long>(shape.mesh.indices.size());
-    }
-
-    return ret;
 }
 
 void printStats(VkPhysicalDevice &device) {
@@ -238,9 +286,9 @@ void deviceInfo() {
 
 int main() {
     Scene scene;
-    std::string filename = "../testGeometry/test.obj";
+    std::string filename = "../testGeometry/plane.obj";
     std::string mtlfilename = "../testGeometry/";
-    scene.loadFromObj(filename,mtlfilename);
+    scene.loadModelFromFile(filename,mtlfilename);
 
     return 0;
 }
