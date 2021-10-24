@@ -12,8 +12,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(3rdParty)
+add_subdirectory(lib)
 
 add_executable(openRayner openRayner.cpp)
-target_link_libraries(openRayner Vulkan::Vulkan)
-target_link_libraries(openRayner glm)
-target_link_libraries(openRayner tinyobj)
+target_link_libraries(openRayner PRIVATE Vulkan::Vulkan)
+target_link_libraries(openRayner PRIVATE glm)
+target_link_libraries(openRayner PRIVATE tinyobj)
+target_link_libraries(openRayner PRIVATE device)

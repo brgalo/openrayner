@@ -11,52 +11,61 @@
 #include "vulkan/vulkan.h"
 #include "glm/glm.hpp"
 #include "openRayner.h"
+#include "lib/device.hpp"
 
 #define PRINT_INFO false
 
+class PrimitiveData {
+    public:
+    int32_t meshID = -1;
+    int32_t materialID = -1;
+};
+
+class Mesh {
+    public:
+    std::string name;
+    uint32_t nPrimitives;
+    uint32_t primitiveOffset;
+};
+
+struct Index {
+    union {
+        uint32_t raw[3];
+        struct {
+            uint32_t a,b,c;
+        };
+    };
+};
 
 class Scene {
+
+    
     public:
     //bool loadFromGltf(std::string fileName, tinygltf::Model &model);
     bool loadModelFromFile(std::string fileName, std::string mtlFileName);
+    bool pushBuffersToDevice();
     void loadScene();
-
-    class TriangleData {
-
-    };
     
+    class GeometricData {
 
-    class Mesh {
-        std::vector<TriangleData> triangles;
-    };
 
-    std::vector<glm::vec3> vertexBuffer;
-    std::vector<glm::uvec3> indexBuffer;
+        public:
+        std::vector<Mesh> meshes;
+        std::vector<glm::vec3> vertices;
+        std::vector<Index> indices;
+        std::vector<glm::vec3> normals;
+        std::vector<Index> normIdx;
+        std::vector<PrimitiveData> primitives;
+    } geometryData;
+    std::vector<glm::vec3> vertices;
 
     private:
-    struct Vertex {
-        glm::vec3 pos;
-
-    };
-
-    struct Model {
-        std::vector<Vertex> vertices;
-        std::vector<std::array<uint32_t, 3>> indices;
-        std::string name;
-        uint32_t meshNumber;
-    };
-    std::vector<Model> models = {};
     bool parseFromImportedObj(tinyobj::attrib_t importedObj);
 
-
-
-
-
 };
 
-class geometricData {
 
-};
+
 
 
 
@@ -82,52 +91,60 @@ bool Scene::loadModelFromFile(std::string fileName, std::string mtlFileName) {
     auto& shapes = reader.GetShapes();
     auto& materials = reader.GetMaterials();
 
-// Loop over shapes
-for (size_t s = 0; s < shapes.size(); s++) {
-  // Loop over faces(polygon)
-  size_t index_offset = 0;
-  for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
-    size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
+    // TODO: check if all faces are triangles!
+    {
+    //get vec3 typed acess to the float based vertex/normal buffers
+    const glm::vec3* vertBegin = reinterpret_cast<const glm::vec3*>(attrib.vertices.data());
+    const glm::vec3* normBegin = reinterpret_cast<const glm::vec3*>(attrib.normals.data());
 
-    // Loop over vertices in the face.
-    for (size_t v = 0; v < fv; v++) {
-      // access to vertex
-      tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
-      tinyobj::real_t vx = attrib.vertices[3*size_t(idx.vertex_index)+0];
-      tinyobj::real_t vy = attrib.vertices[3*size_t(idx.vertex_index)+1];
-      tinyobj::real_t vz = attrib.vertices[3*size_t(idx.vertex_index)+2];
-
-      std::cout << "vert " << v << " = ( " << vx << " " << vy << " " << vz << " )" << std::endl;
-
-      // Check if `normal_index` is zero or positive. negative = no normal data
-      if (idx.normal_index >= 0) {
-        tinyobj::real_t nx = attrib.normals[3*size_t(idx.normal_index)+0];
-        tinyobj::real_t ny = attrib.normals[3*size_t(idx.normal_index)+1];
-        tinyobj::real_t nz = attrib.normals[3*size_t(idx.normal_index)+2];
-      }
-
-      // Check if `texcoord_index` is zero or positive. negative = no texcoord data
-      if (idx.texcoord_index >= 0) {
-        tinyobj::real_t tx = attrib.texcoords[2*size_t(idx.texcoord_index)+0];
-        tinyobj::real_t ty = attrib.texcoords[2*size_t(idx.texcoord_index)+1];
-      }
-
-      // Optional: vertex colors
-      // tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
-      // tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
-      // tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
+    // deep copy the vertex and normal buffer from floats to glm::vec3
+    geometryData.vertices.assign(vertBegin,vertBegin + attrib.vertices.size()/3);
+    geometryData.normals.assign(normBegin,normBegin+attrib.normals.size()/3);
     }
-    index_offset += fv;
 
-    // per-face material
-    shapes[s].mesh.material_ids[f];
-  }
-}
 
+    // create linear primitive buffer
+    uint32_t offset = 0;
+    uint32_t currMeshNo = 0;
+    for (auto& shape : shapes) {
+        std::vector<PrimitiveData> temp;
+        Mesh currMesh;
+        currMesh.name = shape.name;
+        currMesh.nPrimitives = shape.mesh.indices.size()/3;
+        currMesh.primitiveOffset = offset;
+        // std::cout << "Shape name: " << currMesh.name << std::endl;
+
+        offset += currMesh.nPrimitives;
+        // std::cout << "offset: " << offset << std::endl;
+
+        geometryData.meshes.push_back(currMesh);
+
+        for(size_t prim = 0; prim < currMesh.nPrimitives; ++prim) {
+            PrimitiveData data;
+            Index idx,normIdx;
+            // copy indices
+            idx.a = shape.mesh.indices[3*prim + 0].vertex_index;
+            idx.b = shape.mesh.indices[3*prim + 1].vertex_index;
+            idx.c = shape.mesh.indices[3*prim + 2].vertex_index;
+            geometryData.indices.push_back(idx);
+
+            // copy normal indices
+            normIdx.a = shape.mesh.indices[3*prim + 0].normal_index;
+            normIdx.b = shape.mesh.indices[3*prim + 1].normal_index;
+            normIdx.c = shape.mesh.indices[3*prim + 2].normal_index;
+            geometryData.normIdx.push_back(normIdx);
+            data.meshID = currMeshNo;
+            data.materialID = shape.mesh.material_ids[prim];
+        }
+        ++currMeshNo;
+    }
     return true;
 }
 
+bool Scene::pushBuffersToDevice() {
 
+    return true;
+}
 
 void Scene::loadScene() {
 
@@ -286,9 +303,16 @@ void deviceInfo() {
 
 int main() {
     Scene scene;
-    std::string filename = "../testGeometry/plane.obj";
+    std::string filename = "../testGeometry/test.obj";
     std::string mtlfilename = "../testGeometry/";
     scene.loadModelFromFile(filename,mtlfilename);
+
+    Device device;
+    device.getLayers();
+    device.printLayers();
+    device.getExtensions();
+    device.printExtensions();
+    device.initVulkan();
 
     return 0;
 }
