@@ -306,12 +306,12 @@ int main() {
     std::string filename = "../testGeometry/test.obj";
     std::string mtlfilename = "../testGeometry/";
     scene.loadModelFromFile(filename,mtlfilename);
-
+    
     Device device;
-    device.getLayers();
-    device.printLayers();
-    device.getExtensions();
-    device.printExtensions();
+    device.getInstanceLayers();
+    device.printInstanceLayers();
+    device.getInstanceExtensions();
+    device.printInstanceExtensions();
     device.initVulkan();
 
     return 0;
