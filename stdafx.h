@@ -1,3 +1,0 @@
-// helo
-
-#include <math.h>

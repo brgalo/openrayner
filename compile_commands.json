@@ -1,0 +1,12 @@
+[
+{
+  "directory": "/HOME/s409158/projects/openRayner",
+  "command": "/usr/bin/c++   -I/HOME/s409158/projects/openRayner/3rdParty/glm -I/HOME/s409158/projects/openRayner/lib    -std=c++11 -o CMakeFiles/openRayner.dir/openRayner.cpp.o -c /HOME/s409158/projects/openRayner/openRayner.cpp",
+  "file": "/HOME/s409158/projects/openRayner/openRayner.cpp"
+},
+{
+  "directory": "/HOME/s409158/projects/openRayner/lib",
+  "command": "/usr/bin/c++   -I/HOME/s409158/projects/openRayner/lib    -std=c++11 -o CMakeFiles/device.dir/device.cpp.o -c /HOME/s409158/projects/openRayner/lib/device.cpp",
+  "file": "/HOME/s409158/projects/openRayner/lib/device.cpp"
+}
+]

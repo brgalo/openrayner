@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/openRayner.dir/openRayner.cpp.o  -o openRayner  /usr/lib/x86_64-linux-gnu/libvulkan.so lib/libdevice.a 
