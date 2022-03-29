@@ -8,5 +8,6 @@ int main(int argc, char* argv[]) {
     std::cout<< "Hello Rayner!\n";
     Application app = {};
     app.initInstance();
-    app.setupDevices();
+    app.setupDevice();
+    app.createBuffers();
 }

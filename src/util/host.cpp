@@ -1,9 +1,12 @@
 
 #include "vulkan/vulkan.hpp"
 #include "host.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <locale>
+#include <string>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
@@ -57,7 +60,7 @@ void Application::initInstance() {
 
 }
 
-void Application::setupDevices() {
+void Application::setupDevice() {
     // get list of phyical devices
     vkEnumeratePhysicalDevices(instance, &phyDevices.deviceCount, NULL);
     phyDevices.listOfDevices.resize(phyDevices.deviceCount);
@@ -100,14 +103,15 @@ void Application::setupDevices() {
     {
         size_t i = 0;
         for (const auto& queue : device.queues.props) {
-            if(((queue.queueFlags & VK_QUEUE_GRAPHICS_BIT)!=0) && device.queues.graphicsIndex == -1) {
+            if((((queue.queueFlags & VK_QUEUE_GRAPHICS_BIT)!=0) && device.queues.graphicsIndex == -1) ){
                 device.queues.graphicsIndex = i;
             }
-            if(((queue.queueFlags & VK_QUEUE_COMPUTE_BIT)!=0) && device.queues.graphicsIndex == -1) {
+            else if((((queue.queueFlags & VK_QUEUE_COMPUTE_BIT)!=0) && device.queues.computeIndex == -1)) {
                 device.queues.computeIndex = i;
             }
+            ++i;
         }
-        if(device.queues.computeIndex == device.queues.graphicsIndex || device.queues.graphicsIndex == -1 || device.queues.computeIndex == -1) {
+        if( (device.queues.computeIndex == device.queues.graphicsIndex) || ((device.queues.graphicsIndex == -1) || (device.queues.computeIndex == -1))) {
             std::cout << "Error assinging queue indices!\n";
             exit(EXIT_FAILURE);
         } else {
@@ -125,12 +129,12 @@ void Application::setupDevices() {
         device.queues.createInfo[0].pQueuePriorities = &device.queues.priority;
 
         // compute queue create acc structure!
-        device.queues.createInfo[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        device.queues.createInfo[0].pNext = NULL;
-        device.queues.createInfo[0].flags = 0;
-        device.queues.createInfo[0].queueFamilyIndex = device.queues.computeIndex;
-        device.queues.createInfo[0].queueCount = 1;
-        device.queues.createInfo[0].pQueuePriorities = &device.queues.priority;
+        device.queues.createInfo[1].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        device.queues.createInfo[1].pNext = NULL;
+        device.queues.createInfo[1].flags = 0;
+        device.queues.createInfo[1].queueFamilyIndex = device.queues.computeIndex;
+        device.queues.createInfo[1].queueCount = 1;
+        device.queues.createInfo[1].pQueuePriorities = &device.queues.priority;
     }
     {   
         device.createInfo.bufferDevAdressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
@@ -147,7 +151,6 @@ void Application::setupDevices() {
         device.createInfo.rtPipelineFeatures.rayTracingPipelineTraceRaysIndirect = VK_FALSE;
         device.createInfo.rtPipelineFeatures.rayTraversalPrimitiveCulling = VK_FALSE; 
 
-
         device.createInfo.accStructFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
         device.createInfo.accStructFeatures.pNext = &device.createInfo.rtPipelineFeatures;
         device.createInfo.accStructFeatures.accelerationStructure = VK_TRUE;
@@ -155,8 +158,30 @@ void Application::setupDevices() {
         device.createInfo.accStructFeatures.accelerationStructureIndirectBuild = VK_FALSE;
         device.createInfo.accStructFeatures.accelerationStructureHostCommands = VK_FALSE;
         device.createInfo.accStructFeatures.descriptorBindingAccelerationStructureUpdateAfterBind = VK_FALSE; // TODO: Update here if the acc changes!
+
+        device.createInfo.info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        device.createInfo.info.pNext = &device.createInfo.accStructFeatures;
+        device.createInfo.info.flags = 0;
+        device.createInfo.info.queueCreateInfoCount = device.queues.createInfo.size();
+        device.createInfo.info.pQueueCreateInfos = device.queues.createInfo.data();
+        device.createInfo.info.enabledLayerCount = 0;
+        device.createInfo.info.ppEnabledLayerNames = nullptr;
+        device.createInfo.info.enabledExtensionCount = device.enabledExtensions.size();
+        device.createInfo.info.ppEnabledExtensionNames = device.enabledExtensions.data();
+        device.createInfo.info.pEnabledFeatures = NULL;
+
+        if(vkCreateDevice(device.physDeviceHandle, &device.createInfo.info, NULL, &device.logicalDevHandle) == VK_SUCCESS) {
+            std::cout << "\nDevice succesfully created!\n\n";
+        }
+        else exit(EXIT_FAILURE);
     }
-
-
+    {
+        //create Queues
+        vkGetDeviceQueue(device.logicalDevHandle, device.queues.graphicsIndex, 0, &device.queues.graphicsQ);
+        vkGetDeviceQueue(device.logicalDevHandle, device.queues.computeIndex,  0, &device.queues.computeQ );
+    }
 }
 
+void Application::createBuffers() {
+
+}

@@ -8,7 +8,8 @@
 class Application {
     public:
     void initInstance();
-    void setupDevices();
+    void setupDevice();
+    void createBuffers();
     private:
     VkInstance instance = {};
     struct {
@@ -30,6 +31,8 @@ class Application {
             std::array<VkDeviceQueueCreateInfo,2> createInfo;
             uint32_t graphicsIndex = -1;
             uint32_t computeIndex = -1;
+            VkQueue computeQ = 0;
+            VkQueue graphicsQ = 0;
         } queues;
         VkPhysicalDeviceMemoryProperties memoryProperties;
         const std::vector<const char*> enabledExtensions = {
@@ -42,11 +45,12 @@ class Application {
             "VK_KHR_pipeline_library"
         };
         struct {
-            VkPhysicalDeviceBufferDeviceAddressFeatures bufferDevAdressFeatures;
-            VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipelineFeatures;
-            VkPhysicalDeviceAccelerationStructureFeaturesKHR accStructFeatures;
-            VkDeviceCreateInfo info;
+            VkPhysicalDeviceBufferDeviceAddressFeatures bufferDevAdressFeatures = {};
+            VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipelineFeatures = {};
+            VkPhysicalDeviceAccelerationStructureFeaturesKHR accStructFeatures = {};
+            VkDeviceCreateInfo info = {};
         } createInfo;
+        VkDevice logicalDevHandle = VK_NULL_HANDLE;
     } device;
     struct {
         uint32_t deviceCount = 0;
