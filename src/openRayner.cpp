@@ -10,4 +10,5 @@ int main(int argc, char* argv[]) {
     app.initInstance();
     app.setupDevice();
     app.createBuffers();
+    std::cout << "goodbye\n";
 }

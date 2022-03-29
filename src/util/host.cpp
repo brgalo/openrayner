@@ -183,5 +183,15 @@ void Application::setupDevice() {
 }
 
 void Application::createBuffers() {
+    // command pool
+    buffers.commandPool.info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    buffers.commandPool.info.pNext = NULL;
+    buffers.commandPool.info.flags = 0;
+    buffers.commandPool.info.queueFamilyIndex = device.queues.graphicsIndex;
+
+    if(vkCreateCommandPool(device.logicalDevHandle, &buffers.commandPool.info, NULL, &buffers.commandPool.pool) == VK_SUCCESS) {
+        std::cout << "Created Command Pool!\n";
+    }
+
 
 }

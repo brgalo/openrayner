@@ -10,7 +10,9 @@ class Application {
     void initInstance();
     void setupDevice();
     void createBuffers();
+    void loadModel();
     private:
+    std::string modelName = "../testGeometry/plane.obj";
     VkInstance instance = {};
     struct {
         uint32_t layerCount = 0;
@@ -59,5 +61,11 @@ class Application {
         VkPhysicalDeviceMemoryProperties memoryProperties;
 
     } phyDevices;
+    struct {
+        struct {
+            VkCommandPoolCreateInfo info;
+            VkCommandPool pool;
+        } commandPool;
+    } buffers;
 
 };
