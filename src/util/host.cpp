@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <vector>
 #include <iostream>
-#include <vulkan/vulkan_core.h>
-
 
 
 
