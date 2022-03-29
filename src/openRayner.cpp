@@ -6,6 +6,7 @@
 
 int main(int argc, char* argv[]) {
     std::cout<< "Hello Rayner!\n";
-    application app = {};
-    app.init();
+    Application app = {};
+    app.initInstance();
+    app.setupDevices();
 }
