@@ -10,6 +10,9 @@
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
+
+
+
 void Application::initInstance() {
   // populate app&instancecreate info
   applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -194,4 +197,13 @@ void Application::createBuffers() {
     }
 
 
+}
+
+void Application::loadModel() {
+    readerConfig.mtl_search_path = mtlName;
+    if (!reader.ParseFromFile(modelName, readerConfig)) {
+        if (!reader.Error().empty()) {
+            std::cerr << "TinyObjReader: " << reader.Error();
+        }
+    }
 }

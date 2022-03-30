@@ -1,9 +1,16 @@
-#pragma once
+#ifndef HOST_HPP
+#define HOST_HPP
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "../../3rdParty/tinyOBJ/tiny_obj_loader.h"
 
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <vector>
 #include <vulkan/vulkan_core.h>
+
+
+
 
 class Application {
     public:
@@ -13,6 +20,9 @@ class Application {
     void loadModel();
     private:
     std::string modelName = "../testGeometry/plane.obj";
+    std::string mtlName = "../testGeometry/";
+    tinyobj::ObjReader reader;
+    tinyobj::ObjReaderConfig readerConfig;
     VkInstance instance = {};
     struct {
         uint32_t layerCount = 0;
@@ -68,4 +78,6 @@ class Application {
         } commandPool;
     } buffers;
 
+
 };
+#endif
