@@ -7,9 +7,7 @@
 int main(int argc, char* argv[]) {
     std::cout<< "Hello Rayner!\n";
     Application app = {};
-    app.initInstance();
-    app.setupDevice();
     app.loadModel();
-    app.createBuffers();
+    app.vkIns.createBuffers();
     std::cout << "goodbye\n";
 }
