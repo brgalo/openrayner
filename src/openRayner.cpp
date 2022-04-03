@@ -2,9 +2,6 @@
 #include <iostream>
 #include "util/host.hpp"
 #include "vulkan/vulkan.hpp"
-#define TINYOBJLOADER_IMPLEMENTATION
-
-
 
 
 int main(int argc, char* argv[]) {

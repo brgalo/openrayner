@@ -14,6 +14,3 @@ add_library(tinyobj INTERFACE)
 set(TINYOBJ_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tinyOBJ)
 target_sources(tinyobj INTERFACE ${TINYOBJ_DIR}/tiny_obj_loader.h)
 target_include_directories(tinyobj INTERFACE ${TINYGLTF_DIR})
-
-
-#add_library(glm ${CMAKE_CURRENT_SOURCE_DIR/glm})

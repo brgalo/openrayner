@@ -1,16 +1,15 @@
 #ifndef HOST_HPP
 #define HOST_HPP
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include "../../3rdParty/tinyOBJ/tiny_obj_loader.h"
 
 #include "vulkan/vulkan.hpp"
 #include <cstdint>
 #include <vector>
 #include <vulkan/vulkan_core.h>
+#include "../../3rdParty/glm/glm/glm.hpp"
+#include "geometry.hpp"
 
-
-
+int test();
 
 class Application {
     public:
@@ -19,10 +18,9 @@ class Application {
     void createBuffers();
     void loadModel();
     private:
-    std::string modelName = "../testGeometry/plane.obj";
-    std::string mtlName = "../testGeometry/";
-    tinyobj::ObjReader reader;
-    tinyobj::ObjReaderConfig readerConfig;
+    std::string absDir = "/HOME/s409158/projects/openRayner/";
+    std::string modelName = absDir+"testGeometry/plane.obj";
+    std::string mtlName = absDir+"testGeometry/";
     VkInstance instance = {};
     struct {
         uint32_t layerCount = 0;
@@ -77,7 +75,8 @@ class Application {
             VkCommandPool pool;
         } commandPool;
     } buffers;
-
+    Geometry geom;
+    void getNormals();
 
 };
 #endif
