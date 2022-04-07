@@ -1,5 +1,7 @@
 #include "vulkaninstance.hpp"
+#include "host.hpp"
 #include "iostream"
+#include <vulkan/vulkan_core.h>
 
 
 void VulkanInstance::initInstance() {
@@ -173,7 +175,7 @@ void VulkanInstance::setupDevice() {
     }
 }
 
-void VulkanInstance::createBuffers() {
+void VulkanInstance::createBuffers(Application &app) {
     // command pool
     commandPool.info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     commandPool.info.pNext = NULL;
@@ -183,4 +185,32 @@ void VulkanInstance::createBuffers() {
     if(vkCreateCommandPool(logicalDevHandle, &commandPool.info, NULL, &commandPool.pool) == VK_SUCCESS) {
         std::cout << "Created Command Pool!\n";
     }
+
+    // vertex Buffer
+    app.buffers.vertices = VertexBuffer(app.geom.vertexBuf.size()*sizeof(glm::vec3));
+    app.buffers.vertices.create(app.vkIns);
+    app.buffers.vertices.copyH2D(app.vkIns,app.geom.vertexBuf.data());
+    std::cout << "vertex buffer created!\n";
+    // idx Buffer
+    app.buffers.verIdx = IndexBuffer(app.geom.vertexBuf.size()*sizeof(glm::ivec3));
+    app.buffers.verIdx.create(app.vkIns);
+    app.buffers.verIdx.copyH2D(app.vkIns,app.geom.vertexBuf.data());
+    std::cout << "index buffer created!\n";
+}
+
+
+VkPhysicalDeviceMemoryProperties VulkanInstance::getMemProps() const {
+    return this->phyDevices.memoryProperties ;
+}
+
+VkCommandPool VulkanInstance::getCmdPool() const {
+    return this->commandPool.pool;
+}
+
+VkQueue VulkanInstance::getGraphicsQ() const {
+    return this->queues.graphicsQ;
+}
+
+VkQueue VulkanInstance::getComputeQ() const {
+    return this->queues.computeQ;
 }
