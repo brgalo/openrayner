@@ -55,8 +55,8 @@ struct StagingBuffer : singleBuffer {
     void * data;
 };
 struct Buffers{
-        VertexBuffer vertices;
-        IndexBuffer verIdx;
+        VertexBuffer vertices = 0;
+        IndexBuffer verIdx = 0;
         singleBuffer normals;
         singleBuffer HitBuffer;
 };
