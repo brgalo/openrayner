@@ -1,6 +1,8 @@
 #include "vulkaninstance.hpp"
+#include "buffers.hpp"
 #include "host.hpp"
 #include "iostream"
+#include <cstdint>
 #include <vulkan/vulkan_core.h>
 
 
@@ -187,15 +189,19 @@ void VulkanInstance::createBuffers(Application &app) {
     }
 
     // vertex Buffer
-    app.buffers.vertices = VertexBuffer(app.geom.vertexBuf.size()*sizeof(glm::vec3));
+    app.buffers.vertices = VertexBuffer(app.geom.vertices.size()*sizeof(glm::vec3));
     app.buffers.vertices.create(app.vkIns);
-    app.buffers.vertices.copyH2D(app.vkIns,app.geom.vertexBuf.data());
+    app.buffers.vertices.copyH2D(app.vkIns,app.geom.vertices.data());
     std::cout << "vertex buffer created!\n";
     // idx Buffer
-    app.buffers.verIdx = IndexBuffer(app.geom.vertexBuf.size()*sizeof(glm::ivec3));
+    app.buffers.verIdx = IndexBuffer(app.geom.indices.size()*sizeof(glm::ivec3));
     app.buffers.verIdx.create(app.vkIns);
-    app.buffers.verIdx.copyH2D(app.vkIns,app.geom.vertexBuf.data());
+    app.buffers.verIdx.copyH2D(app.vkIns,app.geom.indices.data());
     std::cout << "index buffer created!\n";
+    // trafo buffer
+    app.buffers.trafo = TrafoBuffer(app.geom.trafo.size()*sizeof(VkTransformMatrixKHR));
+    app.buffers.trafo.create(app.vkIns);
+    app.buffers.trafo.copyH2D(app.vkIns, app.geom.trafo.data());
 }
 
 
@@ -213,4 +219,50 @@ VkQueue VulkanInstance::getGraphicsQ() const {
 
 VkQueue VulkanInstance::getComputeQ() const {
     return this->queues.computeQ;
+}
+
+
+void VulkanInstance::buildAccStruct(Application & app) {
+
+	VkDeviceOrHostAddressConstKHR vertexBufferDeviceAddress{};
+    vertexBufferDeviceAddress.deviceAddress = app.buffers.vertices.getDeviceAdress(app.vkIns);
+    VkDeviceOrHostAddressConstKHR indexBufferDeviceAddress{};
+    indexBufferDeviceAddress.deviceAddress = app.buffers.verIdx.getDeviceAdress(app.vkIns);
+	VkDeviceOrHostAddressConstKHR transformBufferDeviceAddress{};
+    transformBufferDeviceAddress.deviceAddress = app.buffers.trafo.getDeviceAdress(app.vkIns);
+    
+    // bottom level
+
+    // build
+    VkAccelerationStructureGeometryKHR accStructGeom{};
+    accStructGeom.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
+    accStructGeom.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR; 
+    accStructGeom.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
+    accStructGeom.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
+    accStructGeom.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
+    accStructGeom.geometry.triangles.vertexData = vertexBufferDeviceAddress;
+    accStructGeom.geometry.triangles.vertexStride = sizeof(glm::vec3);
+    accStructGeom.geometry.triangles.maxVertex = 3;
+    accStructGeom.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
+    accStructGeom.geometry.triangles.indexData = indexBufferDeviceAddress;
+    accStructGeom.geometry.triangles.transformData = transformBufferDeviceAddress;
+
+    // get size info
+    VkAccelerationStructureBuildGeometryInfoKHR buildGeomInfo = {};
+    buildGeomInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+    buildGeomInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+    buildGeomInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+    buildGeomInfo.geometryCount = 1;
+    buildGeomInfo.pGeometries = &accStructGeom;
+
+    const uint32_t nTri = app.geom.indices.size();
+    VkAccelerationStructureBuildSizesInfoKHR accBuildSizeInfo = {};
+    accBuildSizeInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
+    vkGetAccelerationStructureBuildSizesKHR(app.vkIns.logicalDevHandle,
+                                            VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
+                                            &buildGeomInfo,
+                                            &nTri,
+                                            &accBuildSizeInfo);
+    
+
 }

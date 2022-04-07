@@ -42,13 +42,21 @@ void Application::loadModel() {
     size_t nVertices = reader.GetAttrib().GetVertices().size()/3;
     size_t nNormals = reader.GetAttrib().normals.size()/3;
     // copy like this to make sure, the data aligned correctly!
-    geom.vertexBuf = convertVectorTovec3(reader.GetAttrib().GetVertices());
+    geom.vertices = convertVectorTovec3(reader.GetAttrib().GetVertices());
     // copy if file has normals
     if(nNormals == 0) {
-        geom.normBuf = convertVectorTovec3(reader.GetAttrib().normals);
+        geom.normals = convertVectorTovec3(reader.GetAttrib().normals);
     }
 
-    std::vector<glm::ivec3> idx;
+    std::vector<glm::ivec3> idx = {};
+    
+
+    VkTransformMatrixKHR tMat = {};
+    tMat.matrix[0][0] = 1.0;    
+    tMat.matrix[1][1] = 1.0;    
+    tMat.matrix[2][2] = 1.0;
+    geom.trafo.push_back(tMat);
+
     for (auto &shape : reader.GetShapes()) {
         // store mesh info
         meshes.push_back(Mesh(shape, currMeshNo, offset));
@@ -58,11 +66,14 @@ void Application::loadModel() {
         idx.insert(idx.end(),currIdx.begin(),currIdx.end());
 
         // calc normals, if not provided!
+        // TODO: here the transform can be adapted!
 
         // increment counters
         ++currMeshNo;
         offset += currIdx.size();
     }
+    geom.indices = idx;
+    // copy idx to geom buffer!
 
     if (nNormals != 0) getNormals();
 }
@@ -70,15 +81,15 @@ void Application::loadModel() {
 
 void Application::getNormals() {
     size_t i = 0;
-    geom.normBuf.resize(geom.indices.size());
+    geom.normals.resize(geom.indices.size());
 
     for (auto &idx : geom.indices)
      {
-        glm::vec3 A = glm::vec3(geom.vertexBuf.at(idx.x));
-        glm::vec3 B = glm::vec3(geom.vertexBuf.at(idx.y));
-        glm::vec3 C = glm::vec3(geom.vertexBuf.at(idx.z));
+        glm::vec3 A = glm::vec3(geom.vertices.at(idx.x));
+        glm::vec3 B = glm::vec3(geom.vertices.at(idx.y));
+        glm::vec3 C = glm::vec3(geom.vertices.at(idx.z));
 
-        geom.normBuf.at(i) = glm::cross(glm::cross(A, B),C);
+        geom.normals.at(i) = glm::cross(glm::cross(A, B),C);
          ++i;
      }
 }

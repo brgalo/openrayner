@@ -9,5 +9,6 @@ int main(int argc, char* argv[]) {
     Application app = {};
     app.loadModel();
     app.vkIns.createBuffers(app);
+    app.vkIns.buildAccStruct(app);
     std::cout << "goodbye\n";
 }

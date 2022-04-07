@@ -1,4 +1,5 @@
 #include "host.hpp"
+#include <cstdint>
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_core.h>
 #include "buffers.hpp"
@@ -88,4 +89,11 @@ void singleBuffer::copyH2D(const VulkanInstance &inst,const void* const src) {
 
     vkDestroyBuffer(inst.logicalDevHandle,stagingBuf.bufferHost,NULL);
     vkFreeMemory(inst.logicalDevHandle,stagingBuf.bufferMemoryDevice,NULL);
+}
+
+uint64_t singleBuffer::getDeviceAdress(const VulkanInstance &inst) {
+    VkBufferDeviceAddressInfo adressInfo = {};
+    adressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
+    adressInfo.buffer = bufferHost;
+    return vkGetBufferDeviceAddress(inst.logicalDevHandle, &adressInfo);
 }

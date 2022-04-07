@@ -21,6 +21,7 @@ public:
   VkCommandPool getCmdPool() const;
   VkQueue getGraphicsQ() const;
   VkQueue getComputeQ() const;
+  void buildAccStruct(Application &app);
 private:
   // current vulkan Instance
   VkInstance instance = {};

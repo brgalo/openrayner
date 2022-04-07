@@ -5,20 +5,11 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 #include "../../3rdParty/glm/glm/glm.hpp"
 
 
 #include "../../3rdParty/tinyOBJ/tiny_obj_loader.h"
-
-struct Vertex {
-    Vertex(float X, float Y, float Z) : x(X),y(Y),z(Z) {};
-    const float x,y,z;
-};
-
-struct Pos {
-    Pos(Vertex A, Vertex B, Vertex C) : a(A),b(B),c(C) {};
-    const Vertex a,b,c;
-};
 
 class Mesh {
     public:
@@ -29,21 +20,18 @@ class Mesh {
     const uint32_t n;
 };
 
-struct PrimitiveData {
-    PrimitiveData(Vertex A, Vertex B, Vertex C, Vertex N) : p(Pos(A,B,C)),n(N) {};
-    const Pos p;
-    const Vertex n;
-};
 
 struct Geometry {
     Geometry() {};
     Geometry(std::vector<glm::vec3> &vertices,
              std::vector<glm::vec3> &normals,
-             std::vector<glm::uvec3> &idx,
-             std::vector<Mesh> &m) : vertexBuf(vertices),normBuf(normals),indices(idx),meshes(m) {};
-    std::vector<glm::vec3> vertexBuf;
-    std::vector<glm::vec3> normBuf;
-    std::vector<glm::uvec3> indices;
+             std::vector<glm::ivec3> &idx,
+             std::vector<VkTransformMatrixKHR> & trafo,
+             std::vector<Mesh> &m) : vertices(vertices),normals(normals),indices(idx),meshes(m),trafo(trafo) {};
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> normals;
+    std::vector<glm::ivec3> indices;
+    std::vector<VkTransformMatrixKHR> trafo;
     std::vector<Mesh> meshes;
 };
 
